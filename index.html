@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>T-Minus Five</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Unbounded:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF0FB; --surface:#FFFFFF; --ink:#121A4B; --ink-soft:#4A5385; --line:#C9CFEE;
+  --cobalt:#2B44D6; --on-cobalt:#FFFFFF; --marigold:#FFB627; --on-marigold:#121A4B; --flame:#F2542D;
+  --display:'Unbounded','Arial Black','Segoe UI Black',Impact,sans-serif;
+  --body:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D1238; --surface:#172057; --ink:#EEF0FB; --ink-soft:#A9B2E6; --line:#2C387F;
+    --cobalt:#8497FF; --on-cobalt:#0D1238; --flame:#FF6B47;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D1238; --surface:#172057; --ink:#EEF0FB; --ink-soft:#A9B2E6; --line:#2C387F;
+  --cobalt:#8497FF; --on-cobalt:#0D1238; --flame:#FF6B47;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{
+  margin:0;height:100%;background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:1rem;line-height:1.45;
+  -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+h1,h2,p,ol,ul{margin:0}
+
+.console{max-width:560px;min-height:100%;margin:0 auto;padding:16px 16px 20px;display:flex;flex-direction:column;gap:14px}
+
+/* ---------- Clock bar ---------- */
+.bar{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.clock{font-family:var(--display);font-weight:900;font-size:clamp(1.7rem,7.6vw,2.75rem);line-height:1;display:flex;align-items:baseline;white-space:nowrap}
+.clock .tm{font-size:.36em;font-weight:500;color:var(--ink-soft);margin-right:.4em}
+.clock .d{display:inline-block;width:1.04ch;text-align:center}
+.clock .c{display:inline-block;width:.34em;text-align:center}
+.clock.final{color:var(--flame)}
+.side{display:flex;align-items:center;gap:10px;min-width:0;flex:0 1 auto}
+.tracker{list-style:none;padding:0;display:flex;gap:4px;min-width:0}
+.tracker li{flex:0 1 26px;min-width:12px;width:26px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.tracker li i{display:block;height:100%;width:0;background:var(--cobalt);border-radius:5px}
+.tracker li.now{background:var(--surface);box-shadow:inset 0 0 0 2px var(--ink)}
+.ghost{flex:none;border:2px solid var(--ink);background:transparent;border-radius:999px;padding:6px 14px;font-weight:600;font-size:.9rem;min-height:40px}
+.padrocket{display:none}
+
+body[data-phase="intro"] .bar{border-bottom:4px solid var(--ink);padding:8px 4px 0}
+body[data-phase="intro"] .clock{font-size:clamp(4rem,22vw,7.5rem);line-height:.82;padding-bottom:.06em}
+body[data-phase="intro"] .clock .tm{display:none}
+body[data-phase="intro"] .tracker{display:none}
+body[data-phase="intro"] .padrocket{display:block;width:clamp(44px,13vw,70px);margin-right:6px}
+body[data-phase="intro"] .padrocket svg{display:block;width:100%;height:auto}
+
+/* ---------- Stage ---------- */
+.stage{position:relative;flex:1;display:flex;background:var(--surface);border-radius:22px;overflow:hidden;min-height:470px;user-select:none;-webkit-user-select:none}
+#view{flex:1;display:flex;flex-direction:column;padding:22px 18px 18px;min-width:0}
+.scrim{position:absolute;inset:0;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+.scrim h2{font-family:var(--display);font-weight:700;font-size:1.5rem}
+
+.big{display:block;width:100%;min-height:64px;border:0;border-radius:16px;background:var(--cobalt);color:var(--on-cobalt);font-family:var(--display);font-weight:700;font-size:1rem;padding:12px 16px}
+.big:active{transform:translateY(2px)}
+.note{color:var(--ink-soft);font-size:.9rem}
+
+/* Intro */
+.intro{display:flex;flex-direction:column;gap:16px;flex:1}
+.intro h1{font-family:var(--display);font-weight:700;font-size:1.5rem;line-height:1.15}
+.lede{font-size:1.06rem;max-width:34em}
+.checks{list-style:none;padding:0;counter-reset:c;display:grid;gap:10px;margin-bottom:auto}
+.checks li{counter-increment:c;display:grid;grid-template-columns:1.5rem 1fr;column-gap:6px;align-items:baseline}
+.checks li::before{content:counter(c);font-family:var(--display);font-weight:700;font-size:.85rem;color:var(--cobalt)}
+.checks b{font-weight:700}
+.checks span{grid-column:2;color:var(--ink-soft)}
+
+/* Briefing */
+.brief{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.brief .step{color:var(--ink-soft);font-weight:600}
+.brief h2{font-family:var(--display);font-weight:900;font-size:clamp(1.7rem,8vw,2.8rem);line-height:1.05}
+.brief .lede{font-size:1.15rem}
+.brief .in{margin-top:18px;font-weight:600}
+.brief .in b{display:inline-block;min-width:1.2em;font-family:var(--display);font-size:1.5rem;color:var(--cobalt);vertical-align:-.12em}
+.brief .prev{color:var(--ink-soft);margin-bottom:10px}
+
+/* Play frame */
+.timebar{position:absolute;left:0;right:0;top:0;height:6px;background:var(--line)}
+.timebar i{display:block;height:100%;background:var(--marigold);transform-origin:left center}
+.play-head h2{font-family:var(--display);font-weight:700;font-size:1.15rem}
+.play-head p{color:var(--ink-soft)}
+.field{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:14px 0;min-height:0}
+.tally{text-align:center;color:var(--ink-soft);font-weight:600}
+.tally span{color:var(--ink)}
+.ready{display:flex;align-items:center;gap:10px;font-size:.9rem;font-weight:600}
+.ready b{min-width:2.8em;text-align:right;font-variant-numeric:tabular-nums}
+.meter{flex:1;height:10px;border-radius:5px;background:var(--paper);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--cobalt);border-radius:5px;transition:width .2s}
+
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+/* 1 Thrusters */
+.gauge{position:relative;height:92px;border-radius:14px;background:var(--paper);overflow:hidden;border:3px solid transparent}
+.band{position:absolute;top:0;bottom:0;background:var(--marigold)}
+.needle{position:absolute;top:0;bottom:0;width:6px;margin-left:-3px;background:var(--ink);border-radius:3px}
+.gauge.hit{border-color:var(--marigold)}
+.gauge.miss{border-color:var(--flame);animation:shake .25s}
+.gauge.miss .needle{background:var(--flame)}
+
+/* 2 Flight path */
+.sky{position:relative;height:min(320px,42vh);min-height:220px;border-radius:16px;background:var(--paper);overflow:hidden;transition:background .1s}
+.sky.bad{background:color-mix(in srgb,var(--flame) 35%,var(--paper))}
+.thing{position:absolute;width:60px;height:60px;padding:0;border:0;background:none;border-radius:50%;animation:shrink linear forwards}
+.thing svg{display:block;width:100%;height:100%;pointer-events:none}
+.thing.pop{animation:pop .16s ease-out forwards}
+.thing.oops{animation:oops .16s linear forwards}
+@keyframes shrink{to{transform:scale(.55);opacity:.4}}
+@keyframes pop{to{transform:scale(1.5);opacity:0}}
+@keyframes oops{50%{transform:translateX(-6px)}100%{transform:translateX(6px);opacity:.2}}
+body.paused .thing{animation-play-state:paused}
+
+/* 3 Launch code */
+.status{text-align:center;font-family:var(--display);font-weight:700;font-size:1.05rem;min-height:1.5em}
+.pads{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(100%,290px,38vh);min-width:200px;margin:0 auto}
+.pad{aspect-ratio:1;border-radius:20px;border:3px solid transparent;background:var(--paper);display:grid;place-items:center;color:var(--c);padding:0}
+.pad svg{width:46%;height:46%;fill:currentColor;pointer-events:none}
+.pad.p0{--c:var(--cobalt)} .pad.p1{--c:var(--marigold)} .pad.p2{--c:var(--flame)} .pad.p3{--c:var(--ink)}
+.pad.lit{background:var(--c);color:var(--surface)}
+.pads.go .pad{border-color:var(--line)}
+.pads.miss{animation:shake .3s}
+
+/* 4 Gauges */
+.dials{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:8px;width:min(100%,330px,44vh);min-width:230px;margin:0 auto}
+.dial{position:relative;aspect-ratio:1;border-radius:50%;border:3px solid var(--ink);background:var(--paper);padding:0}
+.dial i{position:absolute;left:50%;bottom:50%;width:4px;height:37%;margin-left:-2px;border-radius:2px;background:var(--ink);transform-origin:50% 100%;transform:rotate(var(--a,0deg));pointer-events:none}
+.dial::after{content:'';position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--ink)}
+.dial.right{background:var(--marigold)}
+.dial.right i,.dial.right::after{background:var(--on-marigold)}
+.dial.wrong{background:var(--flame);animation:shake .25s}
+
+/* 5 Fuel mix */
+.sum{text-align:center;font-family:var(--display);font-weight:900;font-size:clamp(2.2rem,11vw,3.4rem);line-height:1.1}
+.answers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.answers button{min-height:78px;border-radius:16px;border:3px solid var(--ink);background:var(--surface);font-family:var(--display);font-weight:700;font-size:1.25rem;padding:0}
+.answers button.right{background:var(--marigold);color:var(--on-marigold)}
+.answers button.wrong{background:var(--flame);color:#fff}
+
+/* Launch */
+.launch{flex:1;display:grid;grid-template-columns:112px 1fr;gap:14px;min-height:430px}
+.alt{position:relative}
+.alt::before{content:'';position:absolute;right:26px;top:0;bottom:0;width:3px;background:var(--line);border-radius:2px}
+.marks{list-style:none;padding:0}
+.marks li{position:absolute;right:27px;bottom:calc((100% - 84px) * var(--p) + 21px);padding-right:30px;font-size:.8rem;line-height:1;color:var(--ink-soft);transform:translateY(50%)}
+.marks li::after{content:'';position:absolute;right:-6px;top:50%;width:13px;height:3px;margin-top:-1.5px;background:var(--ink-soft);border-radius:2px}
+.marks li.reached{color:var(--ink);font-weight:700}
+.marks li.reached::after{background:var(--ink)}
+.rocket{position:absolute;right:5.5px;bottom:0;width:44px;transition:transform 3.2s cubic-bezier(.3,.05,.2,1)}
+.rocket svg{display:block;width:100%;height:auto}
+.rocket .fl{opacity:0;transform-origin:22px 63px}
+.rocket.fly .fl{opacity:1;animation:flick .12s linear infinite alternate}
+.rocket.spent .fl{opacity:0;animation:none}
+@keyframes flick{to{transform:scaleY(.7)}}
+.result{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0}
+.liftoff{font-family:var(--display);font-weight:900;font-size:clamp(1.8rem,9vw,2.6rem)}
+.result h2{font-family:var(--display);font-weight:900;font-size:clamp(1.5rem,7.5vw,2.2rem);line-height:1.08}
+.overall b{font-family:var(--display);font-weight:700;font-size:1.3rem;color:var(--cobalt)}
+.break{list-style:none;padding:0;display:grid;gap:7px;font-size:.9rem}
+.break li{display:grid;grid-template-columns:max-content 1fr 2.8em;gap:8px;align-items:center;white-space:nowrap}
+.break li span{min-width:5.4em}
+.break li b{text-align:right;font-variant-numeric:tabular-nums}
+#res{display:flex;flex-direction:column;gap:12px}
+
+@media (prefers-reduced-motion: reduce){
+  .rocket{transition:none}
+  .rocket.fly .fl{animation:none}
+  .gauge.miss,.pads.miss,.dial.wrong{animation:none}
+  @keyframes shrink{to{opacity:.3}}
+  @keyframes pop{to{opacity:0}}
+  @keyframes oops{to{opacity:.2}}
+}
+</style>
+</head>
+<body data-phase="intro">
+<main class="console">
+  <header class="bar">
+    <div class="clock" id="clock" role="timer" aria-label="Time until launch">
+      <span class="tm">T−</span><span class="d" id="cm">5</span><span class="c">:</span><span class="d" id="cs1">0</span><span class="d" id="cs2">0</span>
+    </div>
+    <div class="side">
+      <div class="padrocket" aria-hidden="true" id="padrocket"></div>
+      <ol class="tracker" id="tracker" aria-label="Progress through the five checks">
+        <li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li>
+      </ol>
+      <button class="ghost" id="pause" hidden>Pause</button>
+    </div>
+  </header>
+
+  <section class="stage">
+    <div id="view"></div>
+    <div class="scrim" id="scrim" hidden>
+      <h2>Paused</h2>
+      <p class="note">The clock is stopped. The check picks up where you left it.</p>
+      <button class="big" id="resume" style="max-width:260px">Resume</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+'use strict';
+
+const $ = (s, r = document) => r.querySelector(s);
+const rand = (a, b) => a + Math.random() * (b - a);
+const randi = (a, b) => Math.floor(rand(a, b + 1));
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const TOTAL = 300000, STAGE = 60000, BRIEF = 8000;
+const BEST_KEY = 'tminusfive.best';
+
+const view = $('#view'), scrim = $('#scrim'), pauseBtn = $('#pause'), resumeBtn = $('#resume');
+const tracker = $('#tracker'), clock = $('#clock');
+const cm = $('#cm'), cs1 = $('#cs1'), cs2 = $('#cs2');
+
+let elapsed = 0, last = 0, raf = 0, paused = false, phase = 'intro';
+let stageIdx = -1, game = null, gen = 0, timers = [];
+let scores = [0, 0, 0, 0, 0];
+let shownSecs = -1, shownReady = -1;
+let briefN = null, tb = null, rm = null, rp = null;
+
+/* ---------- Game-time timers (they freeze when the clock is paused) ---------- */
+function after(ms, fn) { timers.push({ at: elapsed + ms, fn, gen }); }
+function clearTimers() { gen++; timers = []; }
+function runTimers() {
+  if (!timers.length) return;
+  const due = [], keep = [];
+  for (const t of timers) (t.at <= elapsed ? due : keep).push(t);
+  if (!due.length) return;
+  timers = keep;
+  due.sort((a, b) => a.at - b.at);
+  for (const t of due) if (t.gen === gen) t.fn();
+}
+
+/* Pointer-first activation that still works from the keyboard */
+function tap(node, fn) {
+  node.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    if (!paused) fn(e);
+  });
+  node.addEventListener('click', e => { if (e.detail === 0 && !paused) fn(e); });
+}
+
+/* ---------- Artwork ---------- */
+const rocketSVG = flame => `
+<svg viewBox="0 0 44 ${flame ? 84 : 63}" aria-hidden="true">
+  ${flame ? '<g class="fl"><path d="M14 62 Q22 92 30 62Z" fill="var(--marigold)"/><path d="M18 62 Q22 78 26 62Z" fill="var(--flame)"/></g>' : ''}
+  <path d="M8 42 L0 62 H9Z M36 42 L44 62 H35Z" fill="var(--ink)"/>
+  <path d="M22 1 C32 11 36 25 36 40 V58 H8 V40 C8 25 12 11 22 1Z" fill="var(--cobalt)"/>
+  <circle cx="22" cy="30" r="6.5" fill="var(--surface)"/>
+  <rect x="15" y="58" width="14" height="5" rx="1" fill="var(--ink)"/>
+</svg>`;
+const ROCK = `<svg viewBox="0 0 60 60"><polygon points="15,9 37,5 53,19 50,43 31,54 11,46 6,27" fill="var(--ink)"/><circle cx="24" cy="24" r="4.5" fill="var(--paper)" opacity=".35"/><circle cx="38" cy="36" r="3" fill="var(--paper)" opacity=".35"/></svg>`;
+const SAT = `<svg viewBox="0 0 60 60"><rect x="12" y="28" width="36" height="4" fill="var(--ink)"/><rect x="2" y="19" width="15" height="22" rx="2" fill="var(--marigold)"/><rect x="43" y="19" width="15" height="22" rx="2" fill="var(--marigold)"/><circle cx="30" cy="30" r="11" fill="var(--cobalt)"/></svg>`;
+const SHAPES = [
+  ['Triangle', '<svg viewBox="0 0 40 40"><polygon points="20,4 37,34 3,34"/></svg>'],
+  ['Circle', '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16"/></svg>'],
+  ['Square', '<svg viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="3"/></svg>'],
+  ['Diamond', '<svg viewBox="0 0 40 40"><polygon points="20,2 38,20 20,38 2,20"/></svg>']
+];
+
+/* ---------- The five checks ---------- */
+
+function thrusters(field) {
+  field.innerHTML = `
+    <div class="gauge"><div class="band"></div><div class="needle"></div></div>
+    <p class="tally"><span id="t-n">0</span> burns locked</p>
+    <button class="big" id="fire">Fire</button>`;
+  const g = $('.gauge', field), band = $('.band', field), needle = $('.needle', field);
+  const tally = $('#t-n', field), btn = $('#fire', field);
+  let pos = 0, dir = 1, speed = 1 / 1400, bw = .24, bx = .4, hits = 0, locked = false;
+  const draw = () => { band.style.left = bx * 100 + '%'; band.style.width = bw * 100 + '%'; };
+  const move = () => { bx = rand(.04, .96 - bw); draw(); };
+  move();
+  function fire() {
+    if (locked) return;
+    locked = true;
+    const hit = pos >= bx && pos <= bx + bw;
+    if (hit) {
+      hits++; tally.textContent = hits; g.classList.add('hit');
+      speed = Math.min(1 / 620, speed * 1.06); bw = Math.max(.09, bw * .93);
+    } else {
+      g.classList.add('miss'); bw = Math.min(.24, bw * 1.1);
+    }
+    after(380, () => {
+      g.classList.remove('hit', 'miss');
+      if (hit) move(); else { bx = Math.min(bx, .96 - bw); draw(); }
+      locked = false;
+    });
+  }
+  tap(btn, fire);
+  const isFireKey = e => e.code === 'Space' || e.key === 'Enter';
+  const foreign = e => e.target.closest && e.target.closest('button') && e.target !== btn;
+  const kd = e => { if (!isFireKey(e) || foreign(e)) return; e.preventDefault(); if (!e.repeat && !paused) fire(); };
+  const ku = e => { if (isFireKey(e) && !foreign(e)) e.preventDefault(); };
+  document.addEventListener('keydown', kd);
+  document.addEventListener('keyup', ku);
+  return {
+    update(dt) {
+      if (locked) return;
+      pos += dir * speed * dt;
+      if (pos > 1) { pos = 2 - pos; dir = -1; }
+      if (pos < 0) { pos = -pos; dir = 1; }
+      needle.style.left = pos * 100 + '%';
+    },
+    score: () => Math.min(100, hits / 18 * 100),
+    destroy() { document.removeEventListener('keydown', kd); document.removeEventListener('keyup', ku); }
+  };
+}
+
+function flightPath(field) {
+  field.innerHTML = `<div class="sky"></div><p class="tally"><span id="d-n">0</span> rocks cleared</p>`;
+  const sky = $('.sky', field), tally = $('#d-n', field);
+  const live = new Set();
+  const t0 = elapsed, S = 60;
+  let cleared = 0, wrong = 0;
+  function spawn() {
+    const prog = Math.min(1, (elapsed - t0) / 48000);
+    const isSat = Math.random() < .2;
+    const b = document.createElement('button');
+    b.className = 'thing';
+    b.setAttribute('aria-label', isSat ? 'Satellite' : 'Rock');
+    b.innerHTML = isSat ? SAT : ROCK;
+    const W = sky.clientWidth, H = sky.clientHeight;
+    let x = 0, y = 0;
+    for (let k = 0; k < 10; k++) {
+      x = rand(4, Math.max(5, W - S - 4)); y = rand(4, Math.max(5, H - S - 4));
+      let clear = true;
+      for (const o of live) if (Math.hypot(o.x - x, o.y - y) < S + 4) { clear = false; break; }
+      if (clear) break;
+    }
+    b.style.left = x + 'px'; b.style.top = y + 'px';
+    if (!isSat) b.firstElementChild.style.transform = `rotate(${randi(0, 359)}deg)`;
+    const life = 1450 - 450 * prog;
+    b.style.animationDuration = life + 'ms';
+    const rec = { x, y, done: false, gone: false };
+    live.add(rec);
+    const remove = () => { if (rec.gone) return; rec.gone = true; live.delete(rec); b.remove(); };
+    tap(b, () => {
+      if (rec.done) return;
+      rec.done = true;
+      b.style.animationDuration = '';
+      if (isSat) {
+        wrong++; b.classList.add('oops'); sky.classList.add('bad');
+        after(260, () => sky.classList.remove('bad'));
+      } else {
+        cleared++; tally.textContent = cleared; b.classList.add('pop');
+      }
+      after(170, remove);
+    });
+    after(life, () => { if (!rec.done) remove(); });
+    sky.appendChild(b);
+    after(820 - 330 * prog, spawn);
+  }
+  after(300, spawn);
+  return {
+    score: () => Math.max(0, Math.min(100, (cleared - 2 * wrong) / 44 * 100)),
+    destroy() {}
+  };
+}
+
+function launchCode(field) {
+  field.innerHTML = `
+    <p class="status" id="c-s" aria-live="polite">Watch</p>
+    <div class="pads">${SHAPES.map((s, i) => `<button class="pad p${i}" aria-label="${s[0]}">${s[1]}</button>`).join('')}</div>
+    <p class="tally">Code length <span id="c-n">3</span></p>`;
+  const pads = [...field.querySelectorAll('.pad')], wrap = $('.pads', field);
+  const status = $('#c-s', field), lenEl = $('#c-n', field);
+  let seq = [], at = 0, accepting = false, len = 3, pts = 0;
+  const flash = (i, ms) => { pads[i].classList.add('lit'); after(ms, () => pads[i].classList.remove('lit')); };
+  function round() {
+    seq = [];
+    for (let i = 0; i < len; i++) {
+      let n;
+      do { n = randi(0, 3); } while (i > 0 && n === seq[i - 1]);
+      seq.push(n);
+    }
+    at = 0; accepting = false;
+    status.textContent = 'Watch'; lenEl.textContent = len; wrap.classList.remove('go');
+    seq.forEach((p, i) => after(450 + i * 500, () => flash(p, 340)));
+    after(450 + len * 500, () => { accepting = true; status.textContent = 'Your turn'; wrap.classList.add('go'); });
+  }
+  pads.forEach((p, i) => tap(p, () => {
+    if (!accepting) return;
+    flash(i, 170);
+    if (i === seq[at]) {
+      at++;
+      if (at === seq.length) {
+        accepting = false; pts += len; len = Math.min(9, len + 1);
+        status.textContent = 'Code accepted'; wrap.classList.remove('go');
+        after(650, round);
+      }
+    } else {
+      accepting = false;
+      status.textContent = 'Wrong pad. New code coming.';
+      wrap.classList.remove('go'); wrap.classList.add('miss');
+      after(950, () => { wrap.classList.remove('miss'); round(); });
+    }
+  }));
+  after(250, round);
+  return { score: () => Math.min(100, pts / 30 * 100), destroy() {} };
+}
+
+function gauges(field) {
+  field.innerHTML = `<div class="dials"></div><p class="tally"><span id="g-n">0</span> faults found</p>`;
+  const grid = $('.dials', field), tally = $('#g-n', field);
+  let found = 0, locked = false;
+  function build() {
+    const n = found < 4 ? 3 : found < 10 ? 4 : 5;
+    const delta = Math.max(20, 80 - found * 4) * (Math.random() < .5 ? -1 : 1);
+    const base = randi(0, 359), odd = randi(0, n * n - 1);
+    grid.style.setProperty('--n', n);
+    grid.innerHTML = '';
+    for (let i = 0; i < n * n; i++) {
+      const b = document.createElement('button');
+      b.className = 'dial';
+      b.setAttribute('aria-label', 'Dial ' + (i + 1));
+      b.innerHTML = '<i></i>';
+      b.style.setProperty('--a', (base + (i === odd ? delta : 0)) + 'deg');
+      tap(b, () => {
+        if (locked) return;
+        locked = true;
+        if (i === odd) {
+          found++; tally.textContent = found; b.classList.add('right');
+          after(220, () => { locked = false; build(); });
+        } else {
+          b.classList.add('wrong');
+          after(600, () => { b.classList.remove('wrong'); locked = false; });
+        }
+      });
+      grid.appendChild(b);
+    }
+  }
+  build();
+  return { score: () => Math.min(100, found / 18 * 100), destroy() {} };
+}
+
+function fuelMix(field) {
+  field.innerHTML = `
+    <p class="sum" id="f-q" aria-live="polite"></p>
+    <div class="answers"></div>
+    <p class="tally"><span id="f-n">0</span> tanks filled</p>`;
+  const q = $('#f-q', field), box = $('.answers', field), tally = $('#f-n', field);
+  let correct = 0, locked = false, buttons = [];
+  function make() {
+    let a, b, op;
+    if (correct < 5) { a = randi(4, 25); b = randi(3, 20); op = '+'; }
+    else if (correct < 11) {
+      if (Math.random() < .5) { a = randi(15, 60); b = randi(12, 39); op = '+'; }
+      else { a = randi(30, 90); b = randi(8, a - 6); op = '−'; }
+    } else {
+      const r = Math.random();
+      if (r < .4) { a = randi(3, 12); b = randi(3, 9); op = '×'; }
+      else if (r < .7) { a = randi(40, 99); b = randi(15, 60); op = '+'; }
+      else { a = randi(50, 120); b = randi(14, 45); op = '−'; }
+    }
+    const ans = op === '+' ? a + b : op === '−' ? a - b : a * b;
+    const offs = op === '×' ? [a, -a, b, -b, 1, -1, 10, -10] : [1, -1, 2, -2, 10, -10, 9, -9];
+    const opts = new Set([ans]);
+    while (opts.size < 3) { const v = ans + offs[randi(0, offs.length - 1)]; if (v > 0) opts.add(v); }
+    const list = [...opts];
+    for (let i = list.length - 1; i > 0; i--) { const j = randi(0, i); [list[i], list[j]] = [list[j], list[i]]; }
+    q.textContent = `${a} ${op} ${b}`;
+    box.innerHTML = '';
+    buttons = list.map(v => {
+      const btn = document.createElement('button');
+      btn.textContent = v;
+      const pick = () => {
+        if (locked) return;
+        locked = true;
+        if (v === ans) {
+          correct++; tally.textContent = correct; btn.classList.add('right');
+          after(200, next);
+        } else {
+          btn.classList.add('wrong');
+          buttons.forEach(o => { if (o.v === ans) o.btn.classList.add('right'); });
+          after(800, next);
+        }
+      };
+      tap(btn, pick);
+      box.appendChild(btn);
+      return { v, btn, pick };
+    });
+  }
+  function next() { locked = false; make(); }
+  const kd = e => {
+    const k = ['1', '2', '3'].indexOf(e.key);
+    if (k < 0 || paused || !buttons[k]) return;
+    buttons[k].pick();
+  };
+  document.addEventListener('keydown', kd);
+  make();
+  return {
+    score: () => Math.min(100, correct / 18 * 100),
+    destroy() { document.removeEventListener('keydown', kd); }
+  };
+}
+
+const CHECKS = [
+  { name: 'Thrusters', hint: 'Fire when the needle crosses the band.', make: thrusters },
+  { name: 'Flight path', hint: 'Tap the rocks. Leave the satellites alone.', make: flightPath },
+  { name: 'Launch code', hint: 'Watch the pads light up, then repeat the order.', make: launchCode },
+  { name: 'Gauges', hint: 'Find the one dial that points a different way.', make: gauges },
+  { name: 'Fuel mix', hint: 'Pick the right answer to fill a tank.', make: fuelMix }
+];
+
+/* ---------- Clock, tracker, screens ---------- */
+function renderClock() {
+  const secs = Math.ceil((TOTAL - elapsed) / 1000);
+  if (secs === shownSecs) return;
+  shownSecs = secs;
+  const s = secs % 60;
+  cm.textContent = Math.floor(secs / 60);
+  cs1.textContent = Math.floor(s / 10);
+  cs2.textContent = s % 10;
+  clock.classList.toggle('final', secs <= 10 && phase !== 'intro');
+}
+
+function renderTracker() {
+  [...tracker.children].forEach((li, i) => {
+    const done = phase === 'launch' || i < stageIdx;
+    li.className = done ? 'done' : (i === stageIdx ? 'now' : '');
+    li.firstElementChild.style.width = (done ? scores[i] : 0) + '%';
+    li.setAttribute('aria-label', CHECKS[i].name + (done ? `, ${scores[i]} percent` : i === stageIdx ? ', in progress' : ', to come'));
+  });
+}
+
+function loadBest() {
+  try { const v = JSON.parse(localStorage.getItem(BEST_KEY)); return v && typeof v.score === 'number' ? v : null; }
+  catch (e) { return null; }
+}
+function saveBest(v) { try { localStorage.setItem(BEST_KEY, JSON.stringify(v)); } catch (e) {} }
+
+function showIntro() {
+  phase = 'intro';
+  document.body.dataset.phase = 'intro';
+  $('#padrocket').innerHTML = rocketSVG(false);
+  const best = loadBest();
+  view.innerHTML = `
+    <div class="intro">
+      <h1>T-Minus Five</h1>
+      <p class="lede">Five system checks, one minute each. At zero the rocket launches, and how far it flies depends on how ready you got it.</p>
+      <ol class="checks">${CHECKS.map(c => `<li><b>${c.name}</b><span>${c.hint}</span></li>`).join('')}</ol>
+      <button class="big" id="go">Start the countdown</button>
+      <p class="note">${best ? `Your best flight so far: ${best.tier}, ${best.score}% ready.` : 'It takes exactly five minutes. You can pause at any point.'}</p>
+    </div>`;
+  $('#go').addEventListener('click', start);
+  renderClock();
+}
+
+function start() {
+  elapsed = 0; stageIdx = -1; game = null; scores = [0, 0, 0, 0, 0];
+  shownSecs = -1; paused = false; clearTimers();
+  phase = 'brief';
+  document.body.dataset.phase = 'run';
+  document.body.classList.remove('paused');
+  scrim.hidden = true;
+  pauseBtn.hidden = false; pauseBtn.textContent = 'Pause';
+  last = performance.now();
+  cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(frame);
+}
+
+function beginBrief(idx) {
+  const prev = idx > 0 ? `<p class="prev">${CHECKS[idx - 1].name} came in at ${scores[idx - 1]}%.</p>` : '';
+  stageIdx = idx; phase = 'brief';
+  view.innerHTML = `
+    <div class="brief">
+      ${prev}
+      <p class="step">Check ${idx + 1} of 5</p>
+      <h2>${CHECKS[idx].name}</h2>
+      <p class="lede">${CHECKS[idx].hint}</p>
+      <p class="in">Starts in <b id="bn">${BRIEF / 1000}</b></p>
+    </div>`;
+  briefN = $('#bn');
+  renderTracker();
+}
+
+function beginPlay(idx) {
+  phase = 'play';
+  view.innerHTML = `
+    <div class="timebar"><i id="tb"></i></div>
+    <div class="play-head"><h2>${CHECKS[idx].name}</h2><p>${CHECKS[idx].hint}</p></div>
+    <div class="field" id="field"></div>
+    <div class="ready"><span>Readiness</span><div class="meter"><i id="rm"></i></div><b id="rp">0%</b></div>`;
+  tb = $('#tb'); rm = $('#rm'); rp = $('#rp'); shownReady = -1;
+  game = CHECKS[idx].make($('#field'));
+}
+
+function endStage() {
+  if (!game) return;
+  scores[stageIdx] = Math.round(game.score());
+  game.destroy(); game = null;
+  clearTimers();
+}
+
+function frame(now) {
+  raf = requestAnimationFrame(frame);
+  if (paused) { last = now; return; }
+  const dt = Math.max(0, Math.min(now - last, 100));
+  last = now;
+  elapsed += dt;
+  if (elapsed >= TOTAL) { elapsed = TOTAL; endStage(); renderClock(); launch(); return; }
+
+  const idx = Math.floor(elapsed / STAGE);
+  if (idx !== stageIdx) { endStage(); beginBrief(idx); }
+  const inStage = elapsed - idx * STAGE;
+
+  if (phase === 'brief') {
+    if (inStage >= BRIEF) beginPlay(idx);
+    else {
+      const n = String(Math.ceil((BRIEF - inStage) / 1000));
+      if (briefN && briefN.textContent !== n) briefN.textContent = n;
+    }
+  }
+  if (phase === 'play' && game) {
+    if (game.update) game.update(dt);
+    runTimers();
+    tb.style.transform = `scaleX(${Math.max(0, 1 - (inStage - BRIEF) / (STAGE - BRIEF))})`;
+    const r = Math.round(game.score());
+    if (r !== shownReady) { shownReady = r; rm.style.width = r + '%'; rp.textContent = r + '%'; }
+  }
+  renderClock();
+}
+
+function setPaused(v) {
+  if (phase !== 'brief' && phase !== 'play') return;
+  paused = v;
+  document.body.classList.toggle('paused', v);
+  pauseBtn.textContent = v ? 'Resume' : 'Pause';
+  scrim.hidden = !v;
+  view.inert = v;
+  if (v) resumeBtn.focus(); else last = performance.now();
+}
+pauseBtn.addEventListener('click', () => setPaused(!paused));
+resumeBtn.addEventListener('click', () => setPaused(false));
+document.addEventListener('visibilitychange', () => { if (document.hidden && !paused) setPaused(true); });
+
+/* ---------- Launch ---------- */
+const TIERS = [
+  { min: 90, p: .95, mark: 'Moon', title: 'The Moon', text: 'Every system was flight-ready, and it went all the way.' },
+  { min: 75, p: .70, mark: 'Orbit', title: 'Orbit', text: 'Fast enough to stay up there. A strong countdown.' },
+  { min: 50, p: .45, mark: 'Space', title: 'Edge of space', text: 'It crossed the line at 100 km, then came back down.' },
+  { min: 25, p: .20, mark: 'Tower', title: 'Cleared the tower', text: 'It got off the pad, and not a great deal further.' },
+  { min: 0, p: 0, mark: 'Pad', title: 'Short hop', text: 'It lifted, wobbled and settled back near the pad.' }
+];
+function heightFor(score) {
+  const pts = [[0, 0], [25, .2], [50, .45], [75, .7], [90, .95], [100, 1]];
+  for (let i = 1; i < pts.length; i++) {
+    if (score <= pts[i][0]) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+      return y0 + (y1 - y0) * (score - x0) / (x1 - x0);
+    }
+  }
+  return 1;
+}
+
+function launch() {
+  cancelAnimationFrame(raf);
+  phase = 'launch';
+  document.body.dataset.phase = 'launch';
+  pauseBtn.hidden = true;
+  renderTracker();
+
+  const total = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  const tier = TIERS.find(t => total >= t.min);
+  const p = heightFor(total);
+  const before = loadBest();
+  const isBest = !before || total > before.score;
+  if (isBest) saveBest({ score: total, tier: tier.title });
+
+  view.innerHTML = `
+    <div class="launch">
+      <div class="alt" aria-hidden="true">
+        <ol class="marks">${TIERS.map(t => `<li style="--p:${t.p}" data-p="${t.p}">${t.mark}</li>`).join('')}</ol>
+        <div class="rocket" id="rk">${rocketSVG(true)}</div>
+      </div>
+      <div class="result">
+        <p class="liftoff" id="lift" role="status">Liftoff</p>
+        <div id="res" hidden>
+          <h2>${tier.title}</h2>
+          <p>${tier.text}</p>
+          <p class="overall"><b>${total}%</b> ready overall</p>
+          <ul class="break">${CHECKS.map((c, i) => `<li><span>${c.name}</span><div class="meter"><i style="width:${scores[i]}%"></i></div><b>${scores[i]}%</b></li>`).join('')}</ul>
+          <button class="big" id="again">Run the countdown again</button>
+          <p class="note">${isBest ? (before ? `New best flight. The one to beat was ${before.score}%.` : 'That is your first flight on record.') : `Your best flight is still ${before.tier}, ${before.score}%.`}</p>
+        </div>
+      </div>
+    </div>`;
+
+  const rk = $('#rk'), alt = $('.alt', view);
+  const fly = () => {
+    const H = alt.clientHeight - 84;
+    rk.classList.add('fly');
+    rk.style.transform = `translateY(${-H * p}px)`;
+  };
+  const reveal = () => {
+    if (phase !== 'launch') return;
+    rk.classList.add('spent');
+    view.querySelectorAll('.marks li').forEach(li => { if (+li.dataset.p <= p + 1e-6) li.classList.add('reached'); });
+    $('#lift').hidden = true;
+    $('#res').hidden = false;
+    const again = $('#again');
+    again.addEventListener('click', start);
+    again.focus({ preventScroll: true });
+  };
+  if (reduceMotion) { fly(); setTimeout(reveal, 900); }
+  else { requestAnimationFrame(() => requestAnimationFrame(fly)); setTimeout(reveal, 3600); }
+}
+
+showIntro();
+})();
+</script>
+</body>
+</html>
