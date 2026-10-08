@@ -1,2 +1,2 @@
 # minigames
-some Claud-generated minigames to keep you awake
+some AI-generated minigames to keep you awake
