@@ -80,7 +80,7 @@
             height: 100%;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            border-radius: 0.75rem;
+            border-radius: 0.5rem;
         }
         .card-front {
             background-color: #cbd5e1;
@@ -95,23 +95,35 @@
             justify-content: center;
             border: 2px solid #fcd34d;
         }
+        
         @keyframes dropOff {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(60px); opacity: 0; visibility: hidden; }
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            40% { transform: translateY(-10px) scale(1.05); opacity: 1; }
+            100% { transform: translateY(100px) scale(0.9); opacity: 0; visibility: hidden; }
         }
+        
         .matched-drop {
-            animation: dropOff 0.5s ease-in forwards;
+            animation: dropOff 0.6s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
             pointer-events: none; /* Prevents clicks while dropping/hidden */
+        }
+        
+        /* Hide scrollbar for nicer UI */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body class="min-h-screen w-full flex items-center justify-center p-4">
+<body class="min-h-screen w-full flex items-center justify-center p-2 sm:p-4">
 
-    <main class="bg-white max-w-lg w-full rounded-[2rem] shadow-2xl overflow-hidden relative border-4 border-emerald-900 flex flex-col min-h-[700px]">
+    <main class="bg-white max-w-lg w-full rounded-[2rem] shadow-2xl overflow-hidden relative border-4 border-emerald-900 flex flex-col h-[90vh] max-h-[850px]">
         
         <!-- MAIN MENU -->
-        <div id="menu-view" class="view-container active flex-col items-center justify-center h-full p-8 flex-1">
-            <h1 class="text-6xl font-black text-emerald-600 mb-2 text-center drop-shadow-md tracking-tight">Try This</h1>
+        <div id="menu-view" class="view-container active flex-col items-center justify-center h-full p-6 sm:p-8 flex-1 overflow-y-auto hide-scrollbar">
+            <h1 class="text-5xl sm:text-6xl font-black text-emerald-600 mb-2 text-center drop-shadow-md tracking-tight">Try This</h1>
             <p class="text-gray-500 mb-10 text-center font-semibold text-lg">Test your brain & reflexes</p>
 
             <div class="w-full flex flex-col gap-5">
@@ -129,7 +141,7 @@
 
                 <button onclick="openGame('memory')" class="game-btn group relative w-full bg-amber-500 hover:bg-amber-400 text-white rounded-2xl p-6 text-left overflow-hidden border-2 border-amber-700">
                     <span class="relative z-10 block text-2xl font-black">3. Memory Match</span>
-                    <span class="relative z-10 block text-base opacity-90 mt-1">Match the cards</span>
+                    <span class="relative z-10 block text-base opacity-90 mt-1">12 Pairs of Local Cuisines</span>
                     <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-amber-600 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
                 </button>
             </div>
@@ -138,48 +150,47 @@
         <!-- REACTION TIMER GAME -->
         <div id="reaction-view" class="view-container flex-col h-full flex-1">
             <div class="bg-rose-500 text-white p-4 flex items-center justify-between border-b-4 border-rose-700">
-                <button onclick="backToMenu()" class="font-bold hover:bg-rose-600 p-2 rounded-lg transition-colors">← Back</button>
-                <h2 class="text-2xl font-black">Reaction Time</h2>
-                <div class="w-16 text-right text-xs font-bold uppercase tracking-wider opacity-80">Best<br><span id="reaction-best" class="text-sm text-white">--</span></div>
+                <button onclick="backToMenu()" class="font-bold hover:bg-rose-600 px-3 py-2 rounded-lg transition-colors bg-rose-800/30">← Back</button>
+                <h2 class="text-xl sm:text-2xl font-black truncate mx-2">Reaction Time</h2>
+                <div class="w-16 text-right text-[10px] sm:text-xs font-bold uppercase tracking-wider opacity-90">Best<br><span id="reaction-best" class="text-sm sm:text-base text-white">--</span></div>
             </div>
             
             <div class="flex-1 flex flex-col items-center justify-center p-4 bg-slate-50 text-gray-900 relative">
-                
                 <!-- F1 Traffic Light Array -->
-                <div class="relative flex items-center justify-center mb-10 px-2 py-4 scale-[0.85] sm:scale-100">
+                <div class="relative flex items-center justify-center mb-10 px-2 py-4 scale-[0.75] sm:scale-100">
                     <!-- Horizontal center line crossing all columns -->
                     <div class="absolute top-1/2 left-0 w-full h-3 bg-[#111] z-20 -translate-y-1/2 rounded-full shadow-md"></div>
                     
                     <div class="flex gap-2 relative z-10">
                         <!-- 5 Columns x 2 Lights -->
                         <div id="f1-col-1" class="flex flex-col gap-2 bg-[#111] p-3 rounded-xl border border-black shadow-2xl">
-                            <div class="f1-circle top-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
-                            <div class="f1-circle bottom-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
                         </div>
                         <div id="f1-col-2" class="flex flex-col gap-2 bg-[#111] p-3 rounded-xl border border-black shadow-2xl">
-                            <div class="f1-circle top-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
-                            <div class="f1-circle bottom-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
                         </div>
                         <div id="f1-col-3" class="flex flex-col gap-2 bg-[#111] p-3 rounded-xl border border-black shadow-2xl">
-                            <div class="f1-circle top-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
-                            <div class="f1-circle bottom-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
                         </div>
                         <div id="f1-col-4" class="flex flex-col gap-2 bg-[#111] p-3 rounded-xl border border-black shadow-2xl">
-                            <div class="f1-circle top-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
-                            <div class="f1-circle bottom-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
                         </div>
                         <div id="f1-col-5" class="flex flex-col gap-2 bg-[#111] p-3 rounded-xl border border-black shadow-2xl">
-                            <div class="f1-circle top-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
-                            <div class="f1-circle bottom-light w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
+                            <div class="f1-circle w-12 h-12 rounded-full bg-zinc-800 shadow-inner"></div>
                         </div>
                     </div>
                 </div>
 
-                <div id="reaction-result" class="text-6xl font-black mb-8 h-16 text-black font-mono tabular-nums tracking-tighter transition-colors">
+                <div id="reaction-result" class="text-5xl sm:text-6xl font-black mb-8 h-16 text-black font-mono tabular-nums tracking-tighter transition-colors">
                     00.000
                 </div>
 
-                <button id="reaction-action-btn" onmousedown="handleReactionClick()" ontouchstart="handleReactionClick(); event.preventDefault();" class="game-btn w-full max-w-[320px] bg-blue-500 text-white text-3xl font-black py-6 rounded-2xl border-4 border-blue-700">
+                <button id="reaction-action-btn" onmousedown="handleReactionClick()" ontouchstart="handleReactionClick(); event.preventDefault();" class="game-btn w-full max-w-[320px] bg-blue-500 text-white text-2xl sm:text-3xl font-black py-5 sm:py-6 rounded-2xl border-4 border-blue-700 select-none">
                     START
                 </button>
             </div>
@@ -188,10 +199,10 @@
         <!-- COLOR WORD TEST -->
         <div id="color-view" class="view-container flex-col h-full flex-1 bg-slate-50">
             <div class="bg-blue-500 text-white p-4 flex items-center justify-between border-b-4 border-blue-700 shadow-sm z-10">
-                <button onclick="backToMenu()" class="font-bold hover:bg-blue-600 p-2 rounded-lg transition-colors">← Back</button>
+                <button onclick="backToMenu()" class="font-bold hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors bg-blue-800/30">← Back</button>
                 <div class="flex flex-col items-center">
-                    <h2 class="text-2xl font-black">Colour Match</h2>
-                    <div class="text-sm font-bold bg-blue-800 px-3 py-0.5 rounded-full mt-1">⏳ <span id="color-time">30</span>s</div>
+                    <h2 class="text-xl sm:text-2xl font-black">Colour Match</h2>
+                    <div class="text-xs sm:text-sm font-bold bg-blue-800 px-3 py-0.5 rounded-full mt-1">⏳ <span id="color-time">30</span>s</div>
                 </div>
                 <div class="font-bold text-lg bg-blue-700 px-3 py-1 rounded-full shadow-inner">🔥 <span id="color-score">0</span></div>
             </div>
@@ -199,25 +210,25 @@
             <!-- GAME AREA -->
             <div id="color-game-area" class="flex-1 flex flex-col items-center p-6 justify-between">
                 <div class="text-center mt-2">
-                    <p class="text-gray-500 font-bold mb-2 uppercase tracking-wide text-sm">Select the actual text colour!</p>
+                    <p class="text-gray-500 font-bold mb-2 uppercase tracking-wide text-xs sm:text-sm">Select the actual text colour!</p>
                 </div>
 
-                <div class="flex-1 flex items-center justify-center w-full">
-                    <div id="color-word-display" class="text-7xl sm:text-8xl font-black tracking-tighter drop-shadow-md capitalize transition-transform duration-200">
+                <div class="flex-1 flex items-center justify-center w-full min-h-[120px]">
+                    <div id="color-word-display" class="text-6xl sm:text-8xl font-black tracking-tighter drop-shadow-md capitalize transition-transform duration-200">
                         Word
                     </div>
                 </div>
 
-                <div id="color-options-grid" class="grid grid-cols-2 gap-4 w-full max-w-sm mb-4">
+                <div id="color-options-grid" class="grid grid-cols-2 gap-3 sm:gap-4 w-full max-w-sm mb-4">
                     <!-- Buttons generated by JS -->
                 </div>
             </div>
 
             <!-- GAME OVER SCREEN -->
             <div id="color-game-over" class="hidden flex-1 flex-col items-center justify-center p-6 bg-slate-50">
-                <h3 class="text-5xl font-black text-blue-600 mb-2 drop-shadow-sm">Time's Up!</h3>
+                <h3 class="text-5xl font-black text-blue-600 mb-2 drop-shadow-sm text-center">Time's Up!</h3>
                 <p class="text-2xl text-slate-600 font-bold mb-8">Final Score: <span id="color-final-score" class="text-4xl text-blue-500">0</span></p>
-                <div class="flex gap-4 w-full max-w-sm">
+                <div class="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
                     <button onclick="initColorGame()" class="flex-1 game-btn bg-blue-500 hover:bg-blue-400 text-white font-bold text-xl py-4 rounded-xl border-b-4 border-blue-700">Play Again</button>
                     <button onclick="backToMenu()" class="flex-1 game-btn bg-slate-300 hover:bg-slate-200 text-slate-700 font-bold text-xl py-4 rounded-xl border-b-4 border-slate-500">Menu</button>
                 </div>
@@ -226,29 +237,33 @@
 
         <!-- MEMORY MATCH -->
         <div id="memory-view" class="view-container flex-col h-full flex-1 bg-amber-50">
-            <div class="bg-amber-500 text-white p-4 flex items-center justify-between border-b-4 border-amber-700 shadow-sm z-10">
-                <button onclick="backToMenu()" class="font-bold hover:bg-amber-600 p-2 rounded-lg transition-colors">← Back</button>
+            <div class="bg-amber-500 text-white p-4 flex items-center justify-between border-b-4 border-amber-700 shadow-sm z-20">
+                <button onclick="backToMenu()" class="font-bold hover:bg-amber-600 px-3 py-2 rounded-lg transition-colors bg-amber-800/30">← Back</button>
                 <div class="flex flex-col items-center">
-                    <h2 class="text-2xl font-black">Memory Match</h2>
-                    <div class="text-sm font-bold bg-amber-700 px-3 py-0.5 rounded-full mt-1">⏳ <span id="memory-time">60</span>s</div>
+                    <h2 class="text-xl sm:text-2xl font-black">Memory Match</h2>
+                    <div class="text-xs sm:text-sm font-bold bg-amber-700 px-3 py-0.5 rounded-full mt-1">⏳ <span id="memory-time">60</span>s</div>
                 </div>
-                <div class="font-bold text-lg bg-amber-700 px-3 py-1 rounded-full shadow-inner">⭐ <span id="memory-score">0</span>/8</div>
+                <div class="font-bold text-base sm:text-lg bg-amber-700 px-3 py-1 rounded-full shadow-inner flex items-center gap-1">
+                    <span>⭐</span> <span id="memory-score">0</span><span class="text-xs sm:text-sm opacity-80">/12</span>
+                </div>
             </div>
 
-            <!-- GAME AREA -->
-            <div id="memory-game-area" class="flex-1 flex flex-col items-center p-4">
-                <p class="text-gray-500 font-bold mb-4 uppercase tracking-wide text-sm">Match the local cuisines!</p>
-                <!-- Grid container. We use aspect-square wrappers inside to keep layout stable when cards drop -->
-                <div id="memory-grid" class="grid grid-cols-4 gap-2 sm:gap-3 w-full max-w-sm mb-4 flex-1">
+            <!-- GAME AREA (Scrollable to accommodate 24 cards securely on small screens) -->
+            <div id="memory-game-area" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col items-center p-3 sm:p-4">
+                <p class="text-gray-500 font-bold mb-3 uppercase tracking-wide text-[10px] sm:text-xs">Match the 12 local cuisines!</p>
+                
+                <!-- Grid container: 4 cols by 6 rows. 
+                     Wrappers maintain aspect-ratio square, ensuring cards drop but layout stays intact -->
+                <div id="memory-grid" class="grid grid-cols-4 gap-2 sm:gap-3 w-full max-w-[400px] mb-6">
                     <!-- Cards injected by JS -->
                 </div>
             </div>
 
             <!-- GAME OVER SCREEN -->
-            <div id="memory-game-over" class="hidden flex-1 flex-col items-center justify-center p-6 bg-amber-50">
+            <div id="memory-game-over" class="hidden flex-1 flex-col items-center justify-center p-6 bg-amber-50 z-30">
                 <h3 id="memory-end-title" class="text-5xl font-black text-amber-600 mb-2 drop-shadow-sm text-center">Time's Up!</h3>
-                <p class="text-2xl text-slate-600 font-bold mb-8">Pairs Matched: <span id="memory-final-score" class="text-4xl text-amber-500">0</span></p>
-                <div class="flex gap-4 w-full max-w-sm">
+                <p class="text-xl sm:text-2xl text-slate-600 font-bold mb-8">Pairs Matched: <span id="memory-final-score" class="text-4xl text-amber-500">0</span></p>
+                <div class="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
                     <button onclick="initMemoryGame()" class="flex-1 game-btn bg-amber-500 hover:bg-amber-400 text-white font-bold text-xl py-4 rounded-xl border-b-4 border-amber-700">Play Again</button>
                     <button onclick="backToMenu()" class="flex-1 game-btn bg-slate-300 hover:bg-slate-200 text-slate-700 font-bold text-xl py-4 rounded-xl border-b-4 border-slate-500">Menu</button>
                 </div>
@@ -318,14 +333,14 @@
             rResult.classList.add('text-black');
             
             rBtn.innerText = "START";
-            rBtn.className = "game-btn w-full max-w-[320px] bg-blue-500 text-white text-3xl font-black py-6 rounded-2xl border-4 border-blue-700";
+            rBtn.className = "game-btn w-full max-w-[320px] bg-blue-500 text-white text-2xl sm:text-3xl font-black py-5 sm:py-6 rounded-2xl border-4 border-blue-700 select-none";
             reactionState = 'idle';
         }
 
         function cleanupReactionGame() {
             clearInterval(f1SequenceInterval);
             clearTimeout(f1OffTimeout);
-            clearInterval(liveTimerInterval);
+            if (liveTimerInterval) cancelAnimationFrame(liveTimerInterval);
         }
 
         function resetF1Lights() {
@@ -346,12 +361,23 @@
             }
         }
 
+        function startLiveTimer() {
+            function updateTimer() {
+                if (reactionState === 'ready') {
+                    const ms = performance.now() - reactionStartTime;
+                    rResult.innerText = (ms / 1000).toFixed(3).padStart(6, '0');
+                    liveTimerInterval = requestAnimationFrame(updateTimer);
+                }
+            }
+            liveTimerInterval = requestAnimationFrame(updateTimer);
+        }
+
         function handleReactionClick() {
             if (reactionState === 'idle') {
                 // Start F1 light sequence
                 reactionState = 'sequencing';
                 rBtn.innerText = "WAIT...";
-                rBtn.className = "game-btn w-full max-w-[320px] bg-amber-500 text-white text-3xl font-black py-6 rounded-2xl border-4 border-amber-700";
+                rBtn.className = "game-btn w-full max-w-[320px] bg-amber-500 text-white text-2xl sm:text-3xl font-black py-5 sm:py-6 rounded-2xl border-4 border-amber-700 select-none";
                 rResult.innerText = "00.000";
                 rResult.classList.remove('text-rose-600', 'text-green-600');
                 rResult.classList.add('text-black');
@@ -374,17 +400,13 @@
                             reactionStartTime = performance.now();
                             
                             rBtn.innerText = "CLICK!";
-                            rBtn.className = "game-btn w-full max-w-[320px] bg-green-500 text-white text-3xl font-black py-6 rounded-2xl border-4 border-green-700 pop-anim";
+                            rBtn.className = "game-btn w-full max-w-[320px] bg-green-500 text-white text-2xl sm:text-3xl font-black py-5 sm:py-6 rounded-2xl border-4 border-green-700 pop-anim select-none";
                             
-                            // Start live timer display
-                            liveTimerInterval = setInterval(() => {
-                                const ms = performance.now() - reactionStartTime;
-                                rResult.innerText = (ms / 1000).toFixed(3).padStart(6, '0');
-                            }, 10);
+                            startLiveTimer();
 
                         }, delay);
                     }
-                }, 1000); // 1 second between each red light column
+                }, 1000);
 
             } else if (reactionState === 'sequencing' || reactionState === 'waiting') {
                 // Clicked too early penalty
@@ -397,13 +419,13 @@
                 rResult.classList.remove('text-black');
                 
                 rBtn.innerText = "TRY AGAIN";
-                rBtn.className = "game-btn w-full max-w-[320px] bg-rose-500 text-white text-3xl font-black py-6 rounded-2xl border-4 border-rose-700";
+                rBtn.className = "game-btn w-full max-w-[320px] bg-rose-500 text-white text-2xl sm:text-3xl font-black py-5 sm:py-6 rounded-2xl border-4 border-rose-700 select-none";
                 
                 setTimeout(() => rResult.classList.remove('shake-anim'), 400);
 
             } else if (reactionState === 'ready') {
                 // Successful click
-                clearInterval(liveTimerInterval);
+                cleanupReactionGame(); // Stop live timer loop
                 const finalTime = performance.now() - reactionStartTime;
                 reactionState = 'idle';
                 
@@ -418,7 +440,7 @@
                 rResult.classList.remove('text-black');
                 
                 rBtn.innerText = "PLAY AGAIN";
-                rBtn.className = "game-btn w-full max-w-[320px] bg-blue-500 text-white text-3xl font-black py-6 rounded-2xl border-4 border-blue-700";
+                rBtn.className = "game-btn w-full max-w-[320px] bg-blue-500 text-white text-2xl sm:text-3xl font-black py-5 sm:py-6 rounded-2xl border-4 border-blue-700 select-none";
                 
                 setTimeout(() => rResult.classList.remove('pop-anim'), 300);
             }
@@ -502,10 +524,10 @@
             colorOptionsGrid.innerHTML = '';
             options.forEach(optName => {
                 const btn = document.createElement('button');
-                btn.className = "game-btn bg-white text-gray-800 font-bold text-2xl py-5 rounded-2xl border-4 border-blue-200 hover:bg-blue-50 active:bg-blue-100";
+                btn.className = "game-btn bg-white text-gray-800 font-bold text-xl sm:text-2xl py-4 sm:py-5 rounded-2xl border-4 border-blue-200 hover:bg-blue-50 active:bg-blue-100 select-none";
                 btn.innerText = optName;
                 btn.onclick = () => {
-                    if (colorTimeLeft <= 0) return; // Prevent clicking after game over
+                    if (colorTimeLeft <= 0) return;
                     
                     if (optName === currentColorTarget) {
                         colorScore++;
@@ -513,7 +535,7 @@
                         btn.classList.add('bg-green-100', 'border-green-400');
                         setTimeout(nextColorRound, 150);
                     } else {
-                        colorScore = 0;
+                        colorScore = Math.max(0, colorScore - 1); // Optional: penalty for wrong
                         colorScoreDisplay.innerText = colorScore;
                         btn.classList.add('bg-red-100', 'border-red-400');
                         wordDisplay.classList.add('shake-anim');
@@ -527,7 +549,7 @@
             });
         }
 
-        /* --- MEMORY MATCH LOGIC --- */
+        /* --- MEMORY MATCH LOGIC (12 PAIRS) --- */
         const cuisines = [
             { id: 1, emoji: '🥥', name: 'Nasi Lemak' },
             { id: 2, emoji: '🍢', name: 'Satay' },
@@ -537,6 +559,10 @@
             { id: 6, emoji: '🍈', name: 'Durian' },
             { id: 7, emoji: '🍘', name: 'Ketupat' },
             { id: 8, emoji: '🍧', name: 'Cendol' },
+            { id: 9, emoji: '🍤', name: 'Kway Teow' },
+            { id: 10, emoji: '🍗', name: 'Chicken Rice' },
+            { id: 11, emoji: '🍛', name: 'Rendang' },
+            { id: 12, emoji: '🥤', name: 'Ais Kacang' }
         ];
 
         let memoryScore = 0;
@@ -546,6 +572,7 @@
 
         const memoryGrid = document.getElementById('memory-grid');
         const memoryScoreDisplay = document.getElementById('memory-score');
+        const memoryGameArea = document.getElementById('memory-game-area');
 
         function initMemoryGame() {
             memoryScore = 0;
@@ -557,12 +584,15 @@
             document.getElementById('memory-time').innerText = memoryTimeLeft;
             
             // Show Game Area, Hide Game Over
-            document.getElementById('memory-game-area').classList.remove('hidden');
-            document.getElementById('memory-game-area').classList.add('flex');
+            memoryGameArea.classList.remove('hidden');
+            memoryGameArea.classList.add('flex');
             document.getElementById('memory-game-over').classList.add('hidden');
             document.getElementById('memory-game-over').classList.remove('flex');
+            
+            // Scroll to top of game area
+            memoryGameArea.scrollTop = 0;
 
-            // Set up board
+            // Set up board with 24 cards (12 pairs)
             createMemoryBoard();
 
             // Timer Logic
@@ -579,11 +609,12 @@
         function createMemoryBoard() {
             memoryGrid.innerHTML = '';
             
+            // Duplicate the 12 items to make 24 cards, then shuffle
             let gameDeck = [...cuisines, ...cuisines];
             gameDeck = shuffle(gameDeck);
 
-            gameDeck.forEach((item, index) => {
-                // The wrapper remains in the grid cell even when the card drops, preserving layout
+            gameDeck.forEach((item) => {
+                // The wrapper remains in the grid cell even when the card drops, preserving layout and gap.
                 const wrapper = document.createElement('div');
                 wrapper.className = "aspect-square w-full"; 
 
@@ -592,14 +623,15 @@
                 card.dataset.id = item.id;
                 
                 const inner = document.createElement('div');
-                inner.className = "card-inner shadow-md rounded-xl";
+                inner.className = "card-inner shadow-sm sm:shadow-md rounded-[0.5rem]";
 
                 const front = document.createElement('div');
-                front.className = "card-front border-2 border-slate-300";
+                front.className = "card-front border sm:border-2 border-slate-300";
                 
                 const back = document.createElement('div');
                 back.className = "card-back shadow-inner";
-                back.innerHTML = `<div class="text-3xl sm:text-4xl">${item.emoji}</div><div class="text-[0.65rem] sm:text-xs font-bold mt-1 text-center leading-tight text-amber-800">${item.name}</div>`;
+                // Adjust text sizes so they fit nicely in a tighter 4x6 mobile grid
+                back.innerHTML = `<div class="text-2xl sm:text-3xl drop-shadow-sm">${item.emoji}</div><div class="text-[0.55rem] sm:text-[0.65rem] font-black mt-1 text-center leading-tight text-amber-900 px-1 truncate w-full">${item.name}</div>`;
 
                 inner.appendChild(front);
                 inner.appendChild(back);
@@ -641,13 +673,17 @@
             memoryScoreDisplay.innerText = memoryScore;
 
             setTimeout(() => {
-                // Apply the drop animation to the matched cards
-                flippedCards[0].classList.add('matched', 'matched-drop');
-                flippedCards[1].classList.add('matched', 'matched-drop');
+                // Apply the drop animation to the matched cards' inner container so they fall down
+                // The wrapper keeps the slot open.
+                flippedCards[0].classList.add('matched');
+                flippedCards[1].classList.add('matched');
+                
+                flippedCards[0].querySelector('.card-inner').classList.add('matched-drop');
+                flippedCards[1].querySelector('.card-inner').classList.add('matched-drop');
                 
                 resetBoard();
 
-                if (memoryScore === 8) {
+                if (memoryScore === 12) {
                     setTimeout(() => endMemoryGame(true), 600); // Wait for the drop animation to finish
                 }
             }, 600); // Brief pause to see the match before they drop
@@ -668,14 +704,14 @@
 
         function endMemoryGame(isWin) {
             clearInterval(memoryTimerInterval);
-            document.getElementById('memory-game-area').classList.add('hidden');
-            document.getElementById('memory-game-area').classList.remove('flex');
+            memoryGameArea.classList.add('hidden');
+            memoryGameArea.classList.remove('flex');
             
             const gameOverScreen = document.getElementById('memory-game-over');
             gameOverScreen.classList.remove('hidden');
             gameOverScreen.classList.add('flex');
             
-            document.getElementById('memory-end-title').innerText = isWin ? "You Won!" : "Time's Up!";
+            document.getElementById('memory-end-title').innerText = isWin ? "You Win!" : "Time's Up!";
             document.getElementById('memory-final-score').innerText = memoryScore;
         }
     </script>
