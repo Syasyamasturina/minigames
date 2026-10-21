@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who Wants to Be a Millionaire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto Condensed', sans-serif;
+            background: radial-gradient(circle at center, #1a237e 0%, #000000 100%);
+            color: white;
+            user-select: none;
+        }
+
+        .millionaire-btn {
+            background: linear-gradient(to bottom, #000033 0%, #000099 50%, #000033 100%);
+            border: 2px solid #ffaa00;
+            border-radius: 9999px;
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .millionaire-btn::before, .millionaire-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30px;
+            height: 2px;
+            background-color: #ffaa00;
+            box-shadow: 0 0 5px #ffaa00;
+        }
+
+        .millionaire-btn::before { left: -30px; }
+        .millionaire-btn::after { right: -30px; }
+
+        .millionaire-btn:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #000066 0%, #0033cc 50%, #000066 100%);
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.8);
+        }
+
+        .millionaire-question {
+            background: linear-gradient(to bottom, #000033 0%, #000099 50%, #000033 100%);
+            border: 2px solid #ffaa00;
+            border-radius: 9999px;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.5);
+            position: relative;
+        }
+
+        .millionaire-question::before, .millionaire-question::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 50px;
+            height: 2px;
+            background-color: #ffaa00;
+            box-shadow: 0 0 5px #ffaa00;
+        }
+
+        .millionaire-question::before { left: -50px; }
+        .millionaire-question::after { right: -50px; }
+
+        .selected {
+            background: linear-gradient(to bottom, #cc7700 0%, #ffaa00 50%, #cc7700 100%) !important;
+            color: black !important;
+            animation: blink 0.5s infinite alternate;
+        }
+
+        .correct {
+            background: linear-gradient(to bottom, #006600 0%, #00cc00 50%, #006600 100%) !important;
+            border-color: white !important;
+            animation: none;
+        }
+
+        .wrong {
+            background: linear-gradient(to bottom, #660000 0%, #cc0000 50%, #660000 100%) !important;
+            border-color: white !important;
+            animation: none;
+        }
+
+        @keyframes blink {
+            from { opacity: 1; }
+            to { opacity: 0.7; }
+        }
+
+        .tree-level {
+            color: #ffaa00;
+        }
+        .tree-level.current {
+            background-color: #ffaa00;
+            color: black;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .tree-level.passed {
+            color: #aaaaaa;
+        }
+        .tree-level.milestone {
+            color: white;
+            font-weight: bold;
+        }
+        
+        .milestone-current {
+            background-color: white !important;
+            color: black !important;
+        }
+
+        /* Hide elements dynamically */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-center items-center overflow-x-hidden p-4">
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="flex flex-col items-center justify-center text-center w-full max-w-2xl bg-black bg-opacity-70 p-8 rounded-2xl border border-yellow-600 shadow-2xl shadow-yellow-600/30">
+        <h1 class="text-4xl md:text-6xl font-bold text-yellow-500 mb-6 drop-shadow-[0_0_10px_rgba(255,200,0,0.8)] uppercase">Test Your Knowledge</h1>
+        <p class="text-lg md:text-xl mb-4 text-gray-300">Try to get the highest points!</p>
+        <p id="high-score-display" class="text-xl md:text-2xl font-bold text-green-400 mb-8">High Score: 0 PTS</p>
+        <button onclick="startGame()" class="px-8 py-4 bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-xl rounded-full shadow-lg transition-transform transform hover:scale-105">PLAY NOW</button>
+    </div>
+
+    <!-- MAIN GAME SCREEN -->
+    <div id="game-screen" class="hidden w-full max-w-6xl flex flex-col md:flex-row gap-8">
+        
+        <!-- Left: Question & Answers -->
+        <div class="flex-1 flex flex-col justify-end">
+            <!-- Logo/Timer area (Decorative) -->
+            <div class="flex justify-center mb-8">
+                <div class="w-24 h-24 rounded-full border-4 border-yellow-500 flex items-center justify-center bg-blue-900 shadow-[0_0_20px_rgba(255,170,0,0.5)]">
+                    <span id="question-number-display" class="text-3xl font-bold text-yellow-500">Q1</span>
+                </div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="px-12 mb-8 z-10">
+                <div id="question-box" class="millionaire-question w-full min-h-[100px] flex items-center justify-center text-center p-6 text-xl md:text-2xl font-bold">
+                    Loading question...
+                </div>
+            </div>
+
+            <!-- Options Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 px-8 z-10 pb-8">
+                <button id="btn-0" onclick="selectAnswer(0)" class="millionaire-btn py-4 px-6 text-left flex items-center text-lg md:text-xl group">
+                    <span class="text-yellow-500 font-bold mr-4 group-hover:text-yellow-300">A:</span> 
+                    <span id="opt-0" class="text-white">Option A</span>
+                </button>
+                <button id="btn-1" onclick="selectAnswer(1)" class="millionaire-btn py-4 px-6 text-left flex items-center text-lg md:text-xl group">
+                    <span class="text-yellow-500 font-bold mr-4 group-hover:text-yellow-300">B:</span> 
+                    <span id="opt-1" class="text-white">Option B</span>
+                </button>
+                <button id="btn-2" onclick="selectAnswer(2)" class="millionaire-btn py-4 px-6 text-left flex items-center text-lg md:text-xl group">
+                    <span class="text-yellow-500 font-bold mr-4 group-hover:text-yellow-300">C:</span> 
+                    <span id="opt-2" class="text-white">Option C</span>
+                </button>
+                <button id="btn-3" onclick="selectAnswer(3)" class="millionaire-btn py-4 px-6 text-left flex items-center text-lg md:text-xl group">
+                    <span class="text-yellow-500 font-bold mr-4 group-hover:text-yellow-300">D:</span> 
+                    <span id="opt-3" class="text-white">Option D</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right: Money Tree -->
+        <div class="md:w-64 bg-black bg-opacity-80 border-2 border-yellow-600 rounded-xl p-4 flex flex-col justify-center">
+            <h2 class="text-center text-yellow-500 font-bold border-b border-yellow-600 pb-2 mb-4 uppercase tracking-widest text-sm">Points Ladder</h2>
+            <ul id="money-tree" class="flex flex-col-reverse text-right text-lg md:text-xl space-y-reverse space-y-1 font-mono">
+                <!-- JavaScript will populate this -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- GAME OVER / WIN SCREEN -->
+    <div id="end-screen" class="hidden flex flex-col items-center justify-center text-center w-full max-w-2xl bg-black bg-opacity-90 p-8 rounded-2xl border-4 border-yellow-600 shadow-[0_0_30px_rgba(255,200,0,0.5)]">
+        <h1 id="end-title" class="text-5xl md:text-6xl font-bold text-white mb-4">GAME OVER</h1>
+        <p class="text-2xl mb-2 text-gray-300">You walk away with:</p>
+        <div id="final-prize" class="text-6xl font-bold text-yellow-500 mb-4 drop-shadow-[0_0_15px_rgba(255,200,0,0.8)]">0 PTS</div>
+        <p id="end-highscore-msg" class="text-xl text-green-400 font-bold mb-4 hidden">New High Score!</p>
+        <p id="end-message" class="text-lg text-gray-400 mb-8 max-w-md">Better luck next time!</p>
+        <button onclick="resetGame()" class="px-8 py-4 bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-xl rounded-full shadow-lg transition-transform transform hover:scale-105">PLAY AGAIN</button>
+    </div>
+
+    <!-- AUDIO ELEMENTS (Using generic browser beeps for logic, actual sound files would normally go here) -->
+    <script>
+        // --- GAME DATA ---
+        const points = [
+            500, 1000, 5000, 10000, 32000, 
+            64000, 125000, 250000, 500000, 1000000
+        ];
+        
+        // Milestones act as safety nets
+        const milestones = [1, 4]; // Indexes of 1k and 32k
+
+        // 3 questions per prize level
+        const questionBank = [
+            // Level 1: $500
+            [
+                { q: "What color do you get by mixing red and yellow?", options: ["Green", "Orange", "Purple", "Pink"], answer: 1 },
+                { q: "How many days are in a leap year?", options: ["364", "365", "366", "367"], answer: 2 },
+                { q: "Which animal is known as man's best friend?", options: ["Cat", "Dog", "Horse", "Bird"], answer: 1 }
+            ],
+            // Level 2: $1,000 (Milestone 1)
+            [
+                { q: "Which planet is known as the Red Planet?", options: ["Venus", "Jupiter", "Saturn", "Mars"], answer: 3 },
+                { q: "What is the boiling point of water at sea level?", options: ["90°C", "100°C", "110°C", "120°C"], answer: 1 },
+                { q: "How many legs does a spider have?", options: ["Six", "Eight", "Ten", "Twelve"], answer: 1 }
+            ],
+            // Level 3: $5,000
+            [
+                { q: "Who wrote the play 'Romeo and Juliet'?", options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"], answer: 1 },
+                { q: "What is the largest mammal in the world?", options: ["Elephant", "Blue Whale", "Giraffe", "Hippopotamus"], answer: 1 },
+                { q: "Which ocean is the largest on Earth?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], answer: 3 }
+            ],
+            // Level 4: $10,000
+            [
+                { q: "What is the chemical symbol for Gold?", options: ["Ag", "Go", "Au", "Gd"], answer: 2 },
+                { q: "In what year did the Titanic sink?", options: ["1912", "1905", "1923", "1898"], answer: 0 },
+                { q: "Who painted the Mona Lisa?", options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Claude Monet"], answer: 2 }
+            ],
+            // Level 5: $32,000 (Milestone 2)
+            [
+                { q: "Which organ in the human body produces insulin?", options: ["Liver", "Kidney", "Pancreas", "Stomach"], answer: 2 },
+                { q: "What is the capital city of Australia?", options: ["Sydney", "Melbourne", "Canberra", "Brisbane"], answer: 2 },
+                { q: "Who was the first person to step on the Moon?", options: ["Buzz Aldrin", "Yuri Gagarin", "Neil Armstrong", "Michael Collins"], answer: 2 }
+            ],
+            // Level 6: $64,000
+            [
+                { q: "Which element has the atomic number 1?", options: ["Oxygen", "Helium", "Hydrogen", "Carbon"], answer: 2 },
+                { q: "What is the hardest natural substance on Earth?", options: ["Gold", "Iron", "Diamond", "Platinum"], answer: 2 },
+                { q: "Who developed the theory of relativity?", options: ["Isaac Newton", "Albert Einstein", "Nikola Tesla", "Galileo Galilei"], answer: 1 }
+            ],
+            // Level 7: $125,000
+            [
+                { q: "What is the smallest country in the world by land area?", options: ["Monaco", "Nauru", "Vatican City", "Tuvalu"], answer: 2 },
+                { q: "Which language has the most native speakers?", options: ["English", "Spanish", "Hindi", "Mandarin Chinese"], answer: 3 },
+                { q: "In which year did World War II end?", options: ["1941", "1943", "1945", "1947"], answer: 2 }
+            ],
+            // Level 8: $250,000
+            [
+                { q: "Who authored '1984'?", options: ["Aldous Huxley", "George Orwell", "F. Scott Fitzgerald", "Ernest Hemingway"], answer: 1 },
+                { q: "What is the capital of Canada?", options: ["Toronto", "Vancouver", "Montreal", "Ottawa"], answer: 3 },
+                { q: "Which bone is the longest in the human body?", options: ["Femur", "Tibia", "Fibula", "Humerus"], answer: 0 }
+            ],
+            // Level 9: $500,000
+            [
+                { q: "What is the rarest blood type?", options: ["O negative", "AB negative", "B negative", "A negative"], answer: 1 },
+                { q: "Who was the first female Prime Minister of the UK?", options: ["Theresa May", "Margaret Thatcher", "Angela Merkel", "Indira Gandhi"], answer: 1 },
+                { q: "Which desert is the largest hot desert in the world?", options: ["Gobi", "Kalahari", "Sahara", "Arabian"], answer: 2 }
+            ],
+            // Level 10: $1,000,000
+            [
+                { q: "What was the name of the first artificial Earth satellite?", options: ["Apollo 11", "Sputnik 1", "Explorer 1", "Vanguard 1"], answer: 1 },
+                { q: "Who discovered penicillin?", options: ["Marie Curie", "Alexander Fleming", "Louis Pasteur", "Joseph Lister"], answer: 1 },
+                { q: "In Greek mythology, who was the father of Hercules?", options: ["Poseidon", "Hades", "Ares", "Zeus"], answer: 3 }
+            ]
+        ];
+
+        // --- STATE VARIABLES ---
+        let currentQuestionIndex = 0;
+        let guaranteedPoints = 0;
+        let isAnswering = false;
+        let currentSessionQuestions = [];
+        let highScore = localStorage.getItem('millionaireHighScore') ? parseInt(localStorage.getItem('millionaireHighScore')) : 0;
+
+        // --- DOM ELEMENTS ---
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const questionBox = document.getElementById('question-box');
+        const moneyTree = document.getElementById('money-tree');
+        const qNumDisplay = document.getElementById('question-number-display');
+
+        // --- FUNCTIONS ---
+
+        // Initialize high score display on load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('high-score-display').innerText = `High Score: ${highScore.toLocaleString()} PTS`;
+        });
+
+        function initMoneyTree() {
+            moneyTree.innerHTML = '';
+            points.forEach((pointValue, index) => {
+                const li = document.createElement('li');
+                li.id = `tree-level-${index}`;
+                li.className = 'tree-level flex justify-between px-3 py-1';
+                
+                if (milestones.includes(index)) {
+                    li.classList.add('milestone');
+                }
+
+                li.innerHTML = `
+                    <span class="opacity-70">${index + 1}</span> 
+                    <span>${pointValue.toLocaleString()}</span>
+                `;
+                moneyTree.appendChild(li);
+            });
+        }
+
+        function updateMoneyTree() {
+            points.forEach((_, index) => {
+                const el = document.getElementById(`tree-level-${index}`);
+                if (el) {
+                    // Reset previous classes
+                    el.classList.remove('current', 'milestone-current', 'passed');
+                    
+                    // Apply new classes based on progress
+                    if (index === currentQuestionIndex) {
+                        if (milestones.includes(index)) {
+                            el.classList.add('current', 'milestone-current');
+                        } else {
+                            el.classList.add('current');
+                        }
+                    } else if (index < currentQuestionIndex) {
+                        el.classList.add('passed');
+                    }
+                }
+            });
+        }
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            // Randomly select one question for each level for this session
+            currentSessionQuestions = questionBank.map(levelQuestions => {
+                const randomIndex = Math.floor(Math.random() * levelQuestions.length);
+                return levelQuestions[randomIndex];
+            });
+
+            initMoneyTree();
+            loadQuestion();
+        }
+
+        function resetGame() {
+            currentQuestionIndex = 0;
+            guaranteedPoints = 0;
+            isAnswering = false;
+            endScreen.classList.add('hidden');
+            document.getElementById('end-highscore-msg').classList.add('hidden');
+            startGame();
+        }
+
+        function loadQuestion() {
+            isAnswering = false;
+            const currentQ = currentSessionQuestions[currentQuestionIndex];
+            
+            qNumDisplay.innerText = `Q${currentQuestionIndex + 1}`;
+            questionBox.innerText = currentQ.q;
+            
+            // Reset buttons
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`btn-${i}`);
+                const text = document.getElementById(`opt-${i}`);
+                btn.className = 'millionaire-btn py-4 px-6 text-left flex items-center text-lg md:text-xl group';
+                btn.disabled = false;
+                text.innerText = currentQ.options[i];
+            }
+
+            updateMoneyTree();
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (isAnswering) return; // Prevent multiple clicks
+            isAnswering = true;
+
+            const selectedBtn = document.getElementById(`btn-${selectedIndex}`);
+            const correctIndex = currentSessionQuestions[currentQuestionIndex].answer;
+            const correctBtn = document.getElementById(`btn-${correctIndex}`);
+
+            // 1. Final Answer Lock-in phase (Yellow blink)
+            selectedBtn.classList.add('selected');
+
+            // Disable all buttons
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`btn-${i}`).disabled = true;
+            }
+
+            // Simulate suspense delay
+            setTimeout(() => {
+                selectedBtn.classList.remove('selected');
+
+                if (selectedIndex === correctIndex) {
+                    // Correct!
+                    selectedBtn.classList.add('correct');
+                    
+                    // Update guaranteed points if we hit a milestone
+                    if (milestones.includes(currentQuestionIndex)) {
+                        guaranteedPoints = points[currentQuestionIndex];
+                    }
+
+                    setTimeout(() => {
+                        currentQuestionIndex++;
+                        if (currentQuestionIndex >= currentSessionQuestions.length) {
+                            endGame(true); // Won the game
+                        } else {
+                            loadQuestion(); // Next question
+                        }
+                    }, 2000);
+
+                } else {
+                    // Wrong!
+                    selectedBtn.classList.add('wrong');
+                    correctBtn.classList.add('correct'); // Show correct answer
+                    
+                    setTimeout(() => {
+                        endGame(false);
+                    }, 3000);
+                }
+            }, 2500); // 2.5 seconds of suspense
+        }
+
+        function endGame(won) {
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+
+            const title = document.getElementById('end-title');
+            const finalPrizeEl = document.getElementById('final-prize');
+            const message = document.getElementById('end-message');
+            const highScoreMsg = document.getElementById('end-highscore-msg');
+
+            let finalPoints = won ? points[points.length - 1] : guaranteedPoints;
+
+            // Handle High Score tracking
+            if (finalPoints > highScore) {
+                highScore = finalPoints;
+                localStorage.setItem('millionaireHighScore', highScore);
+                highScoreMsg.classList.remove('hidden');
+                document.getElementById('high-score-display').innerText = `High Score: ${highScore.toLocaleString()} PTS`;
+            }
+
+            if (won) {
+                title.innerText = "YOU WON!";
+                title.className = "text-5xl md:text-7xl font-bold text-green-500 mb-4 animate-pulse";
+                finalPrizeEl.innerText = `${finalPoints.toLocaleString()} PTS`;
+                message.innerText = "Congratulations! You are officially a virtual trivia master!";
+            } else {
+                title.innerText = "GAME OVER";
+                title.className = "text-5xl md:text-6xl font-bold text-red-500 mb-4";
+                finalPrizeEl.innerText = `${finalPoints.toLocaleString()} PTS`;
+                
+                if (finalPoints === 0) {
+                    message.innerText = "You leave with nothing. Better brush up on your trivia!";
+                } else {
+                    message.innerText = "You hit a milestone, so you don't leave empty-handed!";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
